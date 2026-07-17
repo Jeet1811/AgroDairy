@@ -15,7 +15,7 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
     @Query("select p from Product p where (:categoryId is null or p.category.id = :categoryId) "
             + "and (:kind is null or p.category.kind = :kind) "
             + "and (:active is null or p.active = :active) "
-            + "and (:search is null or lower(p.name) like lower(concat('%', :search, '%')))")
+            + "and (:search is null or lower(p.name) like lower(concat('%', cast(:search as string), '%')))")
     Page<Product> search(@Param("categoryId") UUID categoryId,
                           @Param("kind") CategoryKind kind,
                           @Param("active") Boolean active,
