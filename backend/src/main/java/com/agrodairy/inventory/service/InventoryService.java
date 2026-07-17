@@ -13,6 +13,7 @@ import com.agrodairy.product.entity.Product;
 import com.agrodairy.product.repository.ProductRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,7 +41,20 @@ public class InventoryService {
 
     public Page<InventoryBatchResponse> listBatches(UUID productId, BatchStatus status, Integer expiringWithinDays, Pageable pageable) {
         LocalDate expiryCutoff = expiringWithinDays != null ? LocalDate.now().plusDays(expiringWithinDays) : null;
-        return batchRepository.search(productId, status, expiryCutoff, pageable).map(InventoryBatchResponse::from);
+
+        Specification<InventoryBatch> spec = (root, query, cb) -> cb.conjunction();
+        if (productId != null) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("product").get("id"), productId));
+        }
+        if (status != null) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("status"), status));
+        }
+        if (expiryCutoff != null) {
+            spec = spec.and((root, query, cb) -> cb.and(
+                    cb.isNotNull(root.get("expiryDate")),
+                    cb.lessThanOrEqualTo(root.get("expiryDate"), expiryCutoff)));
+        }
+        return batchRepository.findAll(spec, pageable).map(InventoryBatchResponse::from);
     }
 
     @Transactional

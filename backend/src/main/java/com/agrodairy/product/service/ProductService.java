@@ -11,9 +11,11 @@ import com.agrodairy.product.repository.ProductCategoryRepository;
 import com.agrodairy.product.repository.ProductRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Locale;
 import java.util.UUID;
 
 @Service
@@ -28,7 +30,21 @@ public class ProductService {
     }
 
     public Page<ProductResponse> list(UUID categoryId, CategoryKind kind, Boolean active, String search, Pageable pageable) {
-        return productRepository.search(categoryId, kind, active, search, pageable).map(ProductResponse::from);
+        Specification<Product> spec = (root, query, cb) -> cb.conjunction();
+        if (categoryId != null) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("category").get("id"), categoryId));
+        }
+        if (kind != null) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("category").get("kind"), kind));
+        }
+        if (active != null) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("active"), active));
+        }
+        if (search != null && !search.isBlank()) {
+            String pattern = "%" + search.toLowerCase(Locale.ROOT) + "%";
+            spec = spec.and((root, query, cb) -> cb.like(cb.lower(root.get("name")), pattern));
+        }
+        return productRepository.findAll(spec, pageable).map(ProductResponse::from);
     }
 
     public ProductResponse get(UUID id) {

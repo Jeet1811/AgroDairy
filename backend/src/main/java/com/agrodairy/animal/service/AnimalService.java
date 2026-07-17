@@ -19,6 +19,7 @@ import com.agrodairy.common.exception.NotFoundException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,7 +46,14 @@ public class AnimalService {
     }
 
     public Page<AnimalResponse> list(AnimalStatus status, AnimalType type, Pageable pageable) {
-        return animalRepository.search(status, type, pageable).map(AnimalResponse::from);
+        Specification<Animal> spec = (root, query, cb) -> cb.conjunction();
+        if (status != null) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("status"), status));
+        }
+        if (type != null) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("type"), type));
+        }
+        return animalRepository.findAll(spec, pageable).map(AnimalResponse::from);
     }
 
     public AnimalResponse get(UUID id) {
@@ -106,7 +114,14 @@ public class AnimalService {
 
     public Page<ProductionRecordResponse> listProduction(UUID animalId, LocalDate from, LocalDate to, Pageable pageable) {
         findAnimalOrThrow(animalId);
-        return productionRecordRepository.search(animalId, from, to, pageable).map(ProductionRecordResponse::from);
+        Specification<MilkProductionRecord> spec = (root, query, cb) -> cb.equal(root.get("animal").get("id"), animalId);
+        if (from != null) {
+            spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("productionDate"), from));
+        }
+        if (to != null) {
+            spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.get("productionDate"), to));
+        }
+        return productionRecordRepository.findAll(spec, pageable).map(ProductionRecordResponse::from);
     }
 
     @Transactional

@@ -23,6 +23,7 @@ import com.agrodairy.order.repository.OrderRepository;
 import com.agrodairy.product.entity.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -115,11 +116,20 @@ public class OrderService {
         return OrderResponse.from(order, itemResponses);
     }
 
+    @Transactional(readOnly = true)
     public Page<OrderResponse> list(AuthenticatedUser principal, OrderStatus status, Pageable pageable) {
         UUID scopedUserId = principal.role() == Role.CUSTOMER ? principal.id() : null;
-        return orderRepository.search(scopedUserId, status, pageable).map(this::toResponseWithItems);
+        Specification<Order> spec = (root, query, cb) -> cb.conjunction();
+        if (scopedUserId != null) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("user").get("id"), scopedUserId));
+        }
+        if (status != null) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("status"), status));
+        }
+        return orderRepository.findAll(spec, pageable).map(this::toResponseWithItems);
     }
 
+    @Transactional(readOnly = true)
     public OrderResponse get(UUID id, AuthenticatedUser principal) {
         Order order = findOrderOrThrow(id);
         if (principal.role() == Role.CUSTOMER && !order.getUser().getId().equals(principal.id())) {
