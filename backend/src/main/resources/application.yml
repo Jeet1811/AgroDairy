@@ -1,9 +1,33 @@
 spring:
   application:
     name: agrodairy-backend
+  datasource:
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
 
 server:
   port: ${PORT:8080}
+
+app:
+  jwt:
+    secret: ${JWT_SECRET}
+    access-token-ttl-minutes: 15
+    refresh-token-ttl-days: 7
+  ai-service:
+    base-url: ${AI_SERVICE_URL:http://ai-service:8000}
+    internal-api-key: ${INTERNAL_API_KEY}
+  cors:
+    allowed-origins: ${FRONTEND_URL:http://localhost:5173}
+  admin-seed:
+    email: ${ADMIN_SEED_EMAIL:}
+    password: ${ADMIN_SEED_PASSWORD:}
 
 management:
   endpoints:
