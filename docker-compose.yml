@@ -1,0 +1,35 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: agrodairy
+      POSTGRES_USER: agrodairy
+      POSTGRES_PASSWORD: devpassword
+    ports: ["5432:5432"]
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+
+  backend:
+    build: ./backend
+    ports: ["8080:8080"]
+    environment:
+      DATABASE_URL: jdbc:postgresql://postgres:5432/agrodairy
+      DATABASE_USERNAME: agrodairy
+      DATABASE_PASSWORD: devpassword
+      JWT_SECRET: dev-only-secret-change-me
+      AI_SERVICE_URL: http://ai-service:8000
+      INTERNAL_API_KEY: dev-only-internal-key
+      FRONTEND_URL: http://localhost:5173
+      ADMIN_SEED_EMAIL: admin@agrodairy.local
+      ADMIN_SEED_PASSWORD: dev-only-admin-change-me
+    depends_on: [postgres]
+
+  ai-service:
+    build: ./ai-service
+    ports: ["8000:8000"]     # exposed locally for dev/debugging only — NEVER exposed in prod, see spec §14
+    environment:
+      DATABASE_URL: postgresql://agrodairy:devpassword@postgres:5432/agrodairy
+      INTERNAL_API_KEY: dev-only-internal-key
+    depends_on: [postgres]
+
+volumes:
+  pgdata:
