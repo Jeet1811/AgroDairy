@@ -28,6 +28,9 @@ ai-service/*.egg-info/
 /docs/
 /AgroDairy-AI.postman_collection.json
 
+# Local-only credential storage — never commit
+/secrets/
+
 # IDE / OS
 .idea/
 .vscode/

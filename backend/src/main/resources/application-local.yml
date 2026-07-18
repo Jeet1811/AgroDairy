@@ -11,6 +11,8 @@ spring:
 app:
   jwt:
     secret: dev-only-secret-change-me
+  google:
+    client-id: 1003035249681-ojai57jgeve2fabs3ftujfdphum910nc.apps.googleusercontent.com
   ai-service:
     base-url: http://localhost:8000
     internal-api-key: dev-only-internal-key
