@@ -1,1 +1,82 @@
 @import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --color-brand-50: #f2f9ee;
+  --color-brand-100: #e1f1d8;
+  --color-brand-200: #c3e3b3;
+  --color-brand-300: #9ccf82;
+  --color-brand-400: #74b857;
+  --color-brand-500: #529c39;
+  --color-brand-600: #3f7e2c;
+  --color-brand-700: #336525;
+  --color-brand-800: #2b5121;
+  --color-brand-900: #25441e;
+
+  --color-cream-50: #fdfbf4;
+  --color-cream-100: #faf5e6;
+  --color-cream-200: #f3e9cc;
+
+  --color-accent-400: #e0a53c;
+  --color-accent-500: #cf8f26;
+  --color-accent-600: #b0761c;
+
+  --shadow-soft: 0 1px 2px rgba(37, 68, 30, 0.06), 0 4px 16px rgba(37, 68, 30, 0.08);
+  --shadow-soft-lg: 0 8px 24px rgba(37, 68, 30, 0.12), 0 2px 8px rgba(37, 68, 30, 0.06);
+}
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  @apply bg-cream-50 text-brand-900 antialiased;
+}
+
+::selection {
+  @apply bg-brand-200 text-brand-900;
+}
+
+.card {
+  @apply rounded-2xl border border-brand-100 bg-white shadow-soft;
+}
+
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition
+    focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2
+    disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+.btn-primary {
+  @apply btn bg-brand-600 text-white shadow-sm hover:bg-brand-700 active:bg-brand-800;
+}
+
+.btn-secondary {
+  @apply btn border border-brand-200 bg-white text-brand-800 hover:bg-brand-50;
+}
+
+.btn-accent {
+  @apply btn bg-accent-500 text-white shadow-sm hover:bg-accent-600;
+}
+
+.btn-danger {
+  @apply btn bg-red-600 text-white hover:bg-red-700;
+}
+
+.btn-ghost {
+  @apply btn text-brand-700 hover:bg-brand-50;
+}
+
+.input {
+  @apply w-full rounded-xl border border-brand-200 bg-white px-3.5 py-2.5 text-sm text-brand-900
+    placeholder:text-brand-400/70 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100;
+}
+
+.label {
+  @apply mb-1.5 block text-sm font-medium text-brand-800;
+}
+
+.badge {
+  @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+}
