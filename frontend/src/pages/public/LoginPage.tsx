@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { LogIn } from 'lucide-react'
 import { AuthLayout } from '@/components/layout/AuthLayout'
+import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton'
 import { useAuth } from '@/context/AuthContext'
 import { apiErrorMessage } from '@/api/client'
 import type { User } from '@/types/auth'
@@ -73,6 +74,7 @@ export default function LoginPage() {
           {submitting ? 'Signing in…' : 'Sign in'}
         </button>
       </form>
+      <GoogleSignInButton onError={setError} />
       <p className="mt-6 text-center text-sm text-brand-600">
         New to AgroDairy AI?{' '}
         <Link to="/register" className="font-semibold text-brand-700 hover:underline">

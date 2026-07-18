@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { UserPlus } from 'lucide-react'
 import { AuthLayout } from '@/components/layout/AuthLayout'
+import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton'
 import { useAuth } from '@/context/AuthContext'
 import { apiErrorMessage } from '@/api/client'
 
@@ -88,6 +89,7 @@ export default function RegisterPage() {
           {submitting ? 'Creating account…' : 'Create account'}
         </button>
       </form>
+      <GoogleSignInButton onError={setError} />
       <p className="mt-6 text-center text-sm text-brand-600">
         Already have an account?{' '}
         <Link to="/login" className="font-semibold text-brand-700 hover:underline">

@@ -9,6 +9,10 @@ export function register(request: RegisterRequest) {
   return unwrap<AuthResponse>(api.post('/auth/register', request))
 }
 
+export function google(idToken: string) {
+  return unwrap<AuthResponse>(api.post('/auth/google', { idToken }))
+}
+
 export function refresh(refreshToken: string) {
   return unwrap<TokenResponse>(api.post('/auth/refresh', { refreshToken }))
 }

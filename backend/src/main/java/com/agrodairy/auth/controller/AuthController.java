@@ -3,6 +3,7 @@ package com.agrodairy.auth.controller;
 import com.agrodairy.auth.dto.AuthResponse;
 import com.agrodairy.auth.dto.CreateStaffRequest;
 import com.agrodairy.auth.dto.CreateStaffResponse;
+import com.agrodairy.auth.dto.GoogleAuthRequest;
 import com.agrodairy.auth.dto.LoginRequest;
 import com.agrodairy.auth.dto.RefreshRequest;
 import com.agrodairy.auth.dto.RegisterRequest;
@@ -41,6 +42,12 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody LoginRequest request) {
         AuthResponse response = authService.login(request);
+        return ResponseEntity.ok(ApiResponse.of(response));
+    }
+
+    @PostMapping("/google")
+    public ResponseEntity<ApiResponse<AuthResponse>> google(@Valid @RequestBody GoogleAuthRequest request) {
+        AuthResponse response = authService.googleAuth(request);
         return ResponseEntity.ok(ApiResponse.of(response));
     }
 
