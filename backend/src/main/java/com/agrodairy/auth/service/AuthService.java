@@ -17,6 +17,8 @@ import com.agrodairy.auth.security.JwtService;
 import com.agrodairy.common.exception.ApiException;
 import com.agrodairy.common.exception.NotFoundException;
 import com.agrodairy.common.exception.ValidationException;
+import com.agrodairy.notification.entity.NotificationType;
+import com.agrodairy.notification.service.NotificationService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -44,17 +46,20 @@ public class AuthService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final NotificationService notificationService;
     private final long refreshTokenTtlDays;
 
     public AuthService(UserRepository userRepository,
                         RefreshTokenRepository refreshTokenRepository,
                         PasswordEncoder passwordEncoder,
                         JwtService jwtService,
+                        NotificationService notificationService,
                         @Value("${app.jwt.refresh-token-ttl-days}") long refreshTokenTtlDays) {
         this.userRepository = userRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.notificationService = notificationService;
         this.refreshTokenTtlDays = refreshTokenTtlDays;
     }
 
@@ -133,6 +138,8 @@ public class AuthService {
                 .active(true)
                 .build();
         userRepository.saveAndFlush(user);
+        notificationService.notifyUser(user, NotificationType.WELCOME,
+                "Welcome to AgroDairy AI, " + user.getFullName() + "! Your " + user.getRole() + " account is ready.");
         return new CreateStaffResponse(UserResponse.from(user));
     }
 

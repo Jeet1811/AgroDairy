@@ -7,6 +7,7 @@ import com.agrodairy.auth.security.AuthenticatedUser;
 import com.agrodairy.common.exception.ApiException;
 import com.agrodairy.common.exception.NotFoundException;
 import com.agrodairy.inventory.service.InventoryService;
+import com.agrodairy.notification.service.NotificationService;
 import com.agrodairy.order.dto.UpdateOrderStatusRequest;
 import com.agrodairy.order.entity.Order;
 import com.agrodairy.order.entity.OrderStatus;
@@ -47,8 +48,11 @@ class OrderServiceTest {
     @Mock
     private InventoryService inventoryService;
 
+    @Mock
+    private NotificationService notificationService;
+
     private OrderService newService() {
-        return new OrderService(orderRepository, orderItemRepository, userRepository, cartService, inventoryService);
+        return new OrderService(orderRepository, orderItemRepository, userRepository, cartService, inventoryService, notificationService);
     }
 
     private static Order orderWithStatus(UUID ownerId, OrderStatus status) {

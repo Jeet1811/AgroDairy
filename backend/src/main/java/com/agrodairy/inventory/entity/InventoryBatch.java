@@ -63,6 +63,10 @@ public class InventoryBatch {
     @Column(nullable = false, length = 20)
     private BatchStatus status;
 
+    /** Set once the "expiring within 3 days" notification (§12) has fired, so the daily check doesn't re-notify. */
+    @Column(name = "expiry_notified_at")
+    private Instant expiryNotifiedAt;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;

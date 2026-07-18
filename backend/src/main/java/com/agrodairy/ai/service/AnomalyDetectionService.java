@@ -5,6 +5,9 @@ import com.agrodairy.ai.entity.Severity;
 import com.agrodairy.ai.repository.AnomalyAlertRepository;
 import com.agrodairy.animal.entity.MilkProductionRecord;
 import com.agrodairy.animal.repository.MilkProductionRecordRepository;
+import com.agrodairy.auth.entity.Role;
+import com.agrodairy.notification.entity.NotificationType;
+import com.agrodairy.notification.service.NotificationService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,11 +26,14 @@ public class AnomalyDetectionService {
 
     private final MilkProductionRecordRepository productionRecordRepository;
     private final AnomalyAlertRepository anomalyAlertRepository;
+    private final NotificationService notificationService;
 
     public AnomalyDetectionService(MilkProductionRecordRepository productionRecordRepository,
-                                    AnomalyAlertRepository anomalyAlertRepository) {
+                                    AnomalyAlertRepository anomalyAlertRepository,
+                                    NotificationService notificationService) {
         this.productionRecordRepository = productionRecordRepository;
         this.anomalyAlertRepository = anomalyAlertRepository;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -82,6 +88,11 @@ public class AnomalyDetectionService {
                 .acknowledged(false)
                 .build();
         anomalyAlertRepository.save(alert);
+
+        // §11.3: flag operational patterns only, never phrase this as a medical diagnosis.
+        String message = "Operational Alert: %s produced %sL vs a %sL average — review recent records."
+                .formatted(justInserted.getAnimal().getTag(), alert.getActualValue(), alert.getBaselineMean());
+        notificationService.notifyRoles(List.of(Role.STAFF, Role.ADMIN), NotificationType.ANOMALY_ALERT, message);
     }
 
     private static double average(double[] values) {

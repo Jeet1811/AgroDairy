@@ -3,6 +3,8 @@ package com.agrodairy.subscription.scheduler;
 import com.agrodairy.delivery.entity.Delivery;
 import com.agrodairy.delivery.entity.DeliveryStatus;
 import com.agrodairy.delivery.repository.DeliveryRepository;
+import com.agrodairy.notification.entity.NotificationType;
+import com.agrodairy.notification.service.NotificationService;
 import com.agrodairy.subscription.entity.Subscription;
 import com.agrodairy.subscription.entity.SubscriptionStatus;
 import com.agrodairy.subscription.repository.SubscriptionRepository;
@@ -22,13 +24,16 @@ public class DailyDeliveryGeneratorJob {
     private final SubscriptionRepository subscriptionRepository;
     private final SubscriptionSkipDateRepository skipDateRepository;
     private final DeliveryRepository deliveryRepository;
+    private final NotificationService notificationService;
 
     public DailyDeliveryGeneratorJob(SubscriptionRepository subscriptionRepository,
                                       SubscriptionSkipDateRepository skipDateRepository,
-                                      DeliveryRepository deliveryRepository) {
+                                      DeliveryRepository deliveryRepository,
+                                      NotificationService notificationService) {
         this.subscriptionRepository = subscriptionRepository;
         this.skipDateRepository = skipDateRepository;
         this.deliveryRepository = deliveryRepository;
+        this.notificationService = notificationService;
     }
 
     /** Runs at 20:00 the evening before, generating tomorrow's deliveries. */
@@ -57,6 +62,9 @@ public class DailyDeliveryGeneratorJob {
                     .status(DeliveryStatus.PENDING)
                     .build();
             deliveryRepository.save(delivery);
+
+            String message = "A delivery has been scheduled for tomorrow (" + targetDate + ").";
+            notificationService.notifyUser(subscription.getUser(), NotificationType.DELIVERY_GENERATED, message);
         }
     }
 

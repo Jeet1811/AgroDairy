@@ -12,4 +12,6 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, UUID
         JpaSpecificationExecutor<Subscription> {
 
     List<Subscription> findByStatus(SubscriptionStatus status);
+
+    long countByStatus(SubscriptionStatus status);
 }

@@ -9,6 +9,8 @@ import com.agrodairy.common.exception.NotFoundException;
 import com.agrodairy.common.exception.ValidationException;
 import com.agrodairy.inventory.service.FefoAllocation;
 import com.agrodairy.inventory.service.InventoryService;
+import com.agrodairy.notification.entity.NotificationType;
+import com.agrodairy.notification.service.NotificationService;
 import com.agrodairy.order.dto.CreateOrderRequest;
 import com.agrodairy.order.dto.OrderItemResponse;
 import com.agrodairy.order.dto.OrderResponse;
@@ -58,17 +60,20 @@ public class OrderService {
     private final UserRepository userRepository;
     private final CartService cartService;
     private final InventoryService inventoryService;
+    private final NotificationService notificationService;
 
     public OrderService(OrderRepository orderRepository,
                          OrderItemRepository orderItemRepository,
                          UserRepository userRepository,
                          CartService cartService,
-                         InventoryService inventoryService) {
+                         InventoryService inventoryService,
+                         NotificationService notificationService) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.userRepository = userRepository;
         this.cartService = cartService;
         this.inventoryService = inventoryService;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -149,6 +154,7 @@ public class OrderService {
         }
         order.setStatus(target);
         orderRepository.save(order);
+        notifyOwnerOfStatusChange(order);
         return toResponseWithItems(order);
     }
 
@@ -171,7 +177,13 @@ public class OrderService {
 
         order.setStatus(OrderStatus.CANCELLED);
         orderRepository.save(order);
+        notifyOwnerOfStatusChange(order);
         return toResponseWithItems(order);
+    }
+
+    private void notifyOwnerOfStatusChange(Order order) {
+        String message = "Your order " + order.getId() + " status changed to " + order.getStatus() + ".";
+        notificationService.notifyUser(order.getUser(), NotificationType.ORDER_STATUS_CHANGE, message);
     }
 
     private OrderResponse toResponseWithItems(Order order) {

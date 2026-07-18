@@ -9,6 +9,9 @@ import com.agrodairy.animal.entity.AnimalType;
 import com.agrodairy.animal.entity.MilkProductionRecord;
 import com.agrodairy.animal.entity.Session;
 import com.agrodairy.animal.repository.MilkProductionRecordRepository;
+import com.agrodairy.auth.entity.Role;
+import com.agrodairy.notification.entity.NotificationType;
+import com.agrodairy.notification.service.NotificationService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -37,8 +40,11 @@ class AnomalyDetectionServiceTest {
     @Mock
     private AnomalyAlertRepository anomalyAlertRepository;
 
+    @Mock
+    private NotificationService notificationService;
+
     private AnomalyDetectionService newService() {
-        return new AnomalyDetectionService(productionRecordRepository, anomalyAlertRepository);
+        return new AnomalyDetectionService(productionRecordRepository, anomalyAlertRepository, notificationService);
     }
 
     private static Animal testAnimal() {
@@ -106,6 +112,8 @@ class AnomalyDetectionServiceTest {
         assertThat(alert.getSeverity()).isEqualTo(Severity.MEDIUM);
         assertThat(alert.getAnimal()).isEqualTo(animal);
         assertThat(alert.getProductionDate()).isEqualTo(today);
+
+        verify(notificationService).notifyRoles(eq(List.of(Role.STAFF, Role.ADMIN)), eq(NotificationType.ANOMALY_ALERT), any(String.class));
     }
 
     @Test
