@@ -3,16 +3,20 @@ package com.agrodairy.auth.service;
 import com.agrodairy.auth.dto.AuthResponse;
 import com.agrodairy.auth.dto.CreateStaffRequest;
 import com.agrodairy.auth.dto.CreateStaffResponse;
+import com.agrodairy.auth.dto.GoogleAuthRequest;
 import com.agrodairy.auth.dto.LoginRequest;
 import com.agrodairy.auth.dto.RefreshRequest;
 import com.agrodairy.auth.dto.RegisterRequest;
 import com.agrodairy.auth.dto.TokenResponse;
 import com.agrodairy.auth.dto.UserResponse;
+import com.agrodairy.auth.entity.AuthProvider;
 import com.agrodairy.auth.entity.RefreshToken;
 import com.agrodairy.auth.entity.Role;
 import com.agrodairy.auth.entity.User;
 import com.agrodairy.auth.repository.RefreshTokenRepository;
 import com.agrodairy.auth.repository.UserRepository;
+import com.agrodairy.auth.security.GoogleIdentity;
+import com.agrodairy.auth.security.GoogleTokenVerifier;
 import com.agrodairy.auth.security.JwtService;
 import com.agrodairy.common.exception.ApiException;
 import com.agrodairy.common.exception.NotFoundException;
@@ -47,6 +51,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final NotificationService notificationService;
+    private final GoogleTokenVerifier googleTokenVerifier;
     private final long refreshTokenTtlDays;
 
     public AuthService(UserRepository userRepository,
@@ -54,12 +59,14 @@ public class AuthService {
                         PasswordEncoder passwordEncoder,
                         JwtService jwtService,
                         NotificationService notificationService,
+                        GoogleTokenVerifier googleTokenVerifier,
                         @Value("${app.jwt.refresh-token-ttl-days}") long refreshTokenTtlDays) {
         this.userRepository = userRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.notificationService = notificationService;
+        this.googleTokenVerifier = googleTokenVerifier;
         this.refreshTokenTtlDays = refreshTokenTtlDays;
     }
 
@@ -86,6 +93,40 @@ public class AuthService {
                 .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "UNAUTHORIZED", "Invalid email or password"));
         if (!user.isActive() || !passwordEncoder.matches(request.password(), user.getPasswordHash())) {
             throw new ApiException(HttpStatus.UNAUTHORIZED, "UNAUTHORIZED", "Invalid email or password");
+        }
+        return buildAuthResponse(user);
+    }
+
+    @Transactional
+    public AuthResponse googleAuth(GoogleAuthRequest request) {
+        GoogleIdentity identity = googleTokenVerifier.verify(request.idToken());
+        if (!identity.emailVerified()) {
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "UNAUTHORIZED", "Your Google account's email is not verified");
+        }
+
+        User user = userRepository.findByEmail(identity.email()).orElse(null);
+        if (user == null) {
+            // First time this email has signed in via Google — create a CUSTOMER account for it,
+            // same role restriction as self-registration (STAFF/ADMIN can only be created by an admin).
+            user = User.builder()
+                    .email(identity.email())
+                    .fullName(identity.name())
+                    .role(Role.CUSTOMER)
+                    .authProvider(AuthProvider.GOOGLE)
+                    .googleId(identity.sub())
+                    .active(true)
+                    .build();
+            userRepository.saveAndFlush(user);
+        } else {
+            if (!user.isActive()) {
+                throw new ApiException(HttpStatus.UNAUTHORIZED, "UNAUTHORIZED", "This account is inactive");
+            }
+            if (user.getGoogleId() == null) {
+                // Existing local-password account with the same, Google-verified email — link it
+                // rather than rejecting, since Google has already proven the user owns this email.
+                user.setGoogleId(identity.sub());
+                userRepository.save(user);
+            }
         }
         return buildAuthResponse(user);
     }

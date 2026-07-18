@@ -32,6 +32,8 @@ app:
     secret: ${JWT_SECRET}
     access-token-ttl-minutes: 15
     refresh-token-ttl-days: 7
+  google:
+    client-id: ${GOOGLE_CLIENT_ID:}
   ai-service:
     base-url: ${AI_SERVICE_URL:http://ai-service:8000}
     internal-api-key: ${INTERNAL_API_KEY}

@@ -16,6 +16,9 @@ services:
       DATABASE_USERNAME: agrodairy
       DATABASE_PASSWORD: devpassword
       JWT_SECRET: dev-only-secret-change-me
+      # Leave blank to disable "Continue with Google" — see docs/LOCAL_SETUP_GUIDE.md for how to
+      # create one. Must match frontend/.env's VITE_GOOGLE_CLIENT_ID exactly (same public value).
+      GOOGLE_CLIENT_ID:
       AI_SERVICE_URL: http://ai-service:8000
       INTERNAL_API_KEY: dev-only-internal-key
       FRONTEND_URL: http://localhost:5173
