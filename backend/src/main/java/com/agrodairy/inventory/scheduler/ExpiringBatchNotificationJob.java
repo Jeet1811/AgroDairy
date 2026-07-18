@@ -6,6 +6,7 @@ import com.agrodairy.inventory.entity.InventoryBatch;
 import com.agrodairy.inventory.repository.InventoryBatchRepository;
 import com.agrodairy.notification.entity.NotificationType;
 import com.agrodairy.notification.service.NotificationService;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,7 +21,11 @@ import java.util.List;
  * pin an exact time for this trigger, so 07:00 was chosen to land before the start of business.
  * expiryNotifiedAt marks a batch as already-notified so re-running (or the next day's run while
  * still in the window) doesn't re-notify for the same batch.
+ *
+ * Opted out of the app-wide lazy-initialization default — a lazy bean's @Scheduled methods
+ * never get registered with the scheduler until something else forces its creation first.
  */
+@Lazy(false)
 @Component
 public class ExpiringBatchNotificationJob {
 

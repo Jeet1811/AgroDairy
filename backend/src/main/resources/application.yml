@@ -1,6 +1,14 @@
 spring:
   application:
     name: agrodairy-backend
+  main:
+    # Defers most bean creation until first use instead of all upfront at boot — the single
+    # biggest lever for startup time on a CPU-throttled free-tier container, where the full
+    # eager bean graph (JPA, Security, Flyway, SpringDoc, etc.) was taking 3-5+ minutes and
+    # losing the race against the host's startup/port-scan timeout. The two @Scheduled beans
+    # are explicitly opted back into eager init (see their @Lazy(false)) since a lazy bean's
+    # @Scheduled methods never get registered until something else touches the bean first.
+    lazy-initialization: true
   datasource:
     url: ${DATABASE_URL}
     username: ${DATABASE_USERNAME}

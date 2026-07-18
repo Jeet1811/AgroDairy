@@ -9,6 +9,7 @@ import com.agrodairy.subscription.entity.Subscription;
 import com.agrodairy.subscription.entity.SubscriptionStatus;
 import com.agrodairy.subscription.repository.SubscriptionRepository;
 import com.agrodairy.subscription.repository.SubscriptionSkipDateRepository;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +19,9 @@ import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
 
+/** Opted out of the app-wide lazy-initialization default — a lazy bean's @Scheduled methods
+ * never get registered with the scheduler until something else forces its creation first. */
+@Lazy(false)
 @Component
 public class DailyDeliveryGeneratorJob {
 

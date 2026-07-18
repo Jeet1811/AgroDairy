@@ -14,12 +14,17 @@ EXPOSE 8080
 # of the heap and were pushing total usage over 512MB even with -Xmx320m, causing repeated
 # OOM-kills/restart-looping. UseSerialGC trades multi-threaded GC (irrelevant at this heap
 # size and low traffic) for much lower memory overhead than the default G1 collector.
+#
+# Metaspace needs more room than heap here, not less: this many auto-configured starters
+# (JPA, Security, Flyway, SpringDoc, Actuator, Scheduling) load a lot of classes at boot, and
+# 96MB metaspace OOM'd mid-startup. Runtime heap needs are modest for this app's traffic/data
+# volume, so heap gives up the room metaspace needs.
 ENTRYPOINT ["java", "-Duser.timezone=UTC", \
     "-XX:+UseSerialGC", \
     "-Xss256k", \
-    "-Xmx200m", \
-    "-XX:MaxMetaspaceSize=96m", \
+    "-Xmx128m", \
+    "-XX:MaxMetaspaceSize=192m", \
     "-XX:MaxDirectMemorySize=32m", \
-    "-XX:ReservedCodeCacheSize=64m", \
+    "-XX:ReservedCodeCacheSize=48m", \
     "-XX:CICompilerCount=2", \
     "-jar", "app.jar"]
