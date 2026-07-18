@@ -24,6 +24,10 @@ ai-service/*.egg-info/
 *.sql
 !backend/src/main/resources/db/migration/*.sql
 
+# Local-only reference material — kept on disk, not published to the repo
+/docs/
+/AgroDairy-AI.postman_collection.json
+
 # IDE / OS
 .idea/
 .vscode/
