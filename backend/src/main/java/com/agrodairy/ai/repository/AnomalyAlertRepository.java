@@ -2,8 +2,9 @@ package com.agrodairy.ai.repository;
 
 import com.agrodairy.ai.entity.AnomalyAlert;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import java.util.UUID;
 
-public interface AnomalyAlertRepository extends JpaRepository<AnomalyAlert, UUID> {
+public interface AnomalyAlertRepository extends JpaRepository<AnomalyAlert, UUID>, JpaSpecificationExecutor<AnomalyAlert> {
 }
