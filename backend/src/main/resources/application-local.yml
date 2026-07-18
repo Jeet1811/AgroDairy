@@ -1,0 +1,21 @@
+# Active via `spring.profiles.active=local` — lets the backend run directly on the host
+# (e.g. `mvn spring-boot:run` or a VS Code launch config) against the native local Postgres
+# installation instead of the Dockerized stack. Values mirror docker-compose.yml's defaults
+# so the app behaves identically either way; only the DB host/AI-service URL differ.
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/agrodairy
+    username: agrodairy
+    password: devpassword
+
+app:
+  jwt:
+    secret: dev-only-secret-change-me
+  ai-service:
+    base-url: http://localhost:8000
+    internal-api-key: dev-only-internal-key
+  cors:
+    allowed-origins: http://localhost:5173
+  admin-seed:
+    email: admin@agrodairy.local
+    password: dev-only-admin-change-me

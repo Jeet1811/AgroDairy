@@ -18,6 +18,10 @@ ai-service/app/models/*.joblib
 .env
 *.env.local
 
+# Local DB backups/dumps — contain live data, never commit
+*.sql
+!backend/src/main/resources/db/migration/*.sql
+
 # IDE / OS
 .idea/
 .vscode/

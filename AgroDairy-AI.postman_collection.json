@@ -1,0 +1,911 @@
+{
+  "info": {
+    "_postman_id": "b8f2a6b0-6e2a-4e3f-9b1a-agrodairyapi01",
+    "name": "AgroDairy AI",
+    "description": "Full API collection for the AgroDairy AI platform (Spring Boot backend on http://localhost:8080).\n\n## How to use\n1. Import this file into Postman (File → Import).\n2. Run **Auth → Login (Admin seed)** first — its test script automatically saves `accessToken` / `refreshToken` / `userId` as collection variables, so every other request (which inherits Bearer auth from the collection) just works.\n3. To act as STAFF or CUSTOMER, run **Auth → Create Staff Account** (as admin) or **Auth → Register (Customer)**, then **Auth → Login** with those credentials to refresh the saved token.\n4. Requests that create a resource (animal, product, category, batch, order, subscription) auto-save the new id into a collection variable (e.g. `productId`) so the next request in that folder can use it immediately.\n5. All response envelopes are `{ success, data, meta }` on success, or `{ success: false, error: { code, message, details } }` on failure.\n\nDefault seeded login: `admin@agrodairy.local` / `dev-only-admin-change-me` (see docker-compose.yml).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080/api" },
+    { "key": "accessToken", "value": "" },
+    { "key": "refreshToken", "value": "" },
+    { "key": "userId", "value": "" },
+    { "key": "categoryId", "value": "" },
+    { "key": "productId", "value": "" },
+    { "key": "animalId", "value": "" },
+    { "key": "batchId", "value": "" },
+    { "key": "orderId", "value": "" },
+    { "key": "subscriptionId", "value": "" },
+    { "key": "deliveryId", "value": "" },
+    { "key": "notificationId", "value": "" },
+    { "key": "anomalyId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register (Customer)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"email\": \"customer1@example.com\",\n  \"password\": \"CustPass123!\",\n  \"fullName\": \"Jane Farmer\",\n  \"phone\": \"+91 98765 43210\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] },
+            "description": "Public. Always creates a CUSTOMER-role account."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const body = pm.response.json();",
+                  "  pm.collectionVariables.set('accessToken', body.data.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', body.data.refreshToken);",
+                  "  pm.collectionVariables.set('userId', body.data.user.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login (Admin seed)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"email\": \"admin@agrodairy.local\",\n  \"password\": \"dev-only-admin-change-me\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] },
+            "description": "Public. Swap the body for any other account's credentials to switch roles."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const body = pm.response.json();",
+                  "  pm.collectionVariables.set('accessToken', body.data.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', body.data.refreshToken);",
+                  "  pm.collectionVariables.set('userId', body.data.user.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/refresh", "host": ["{{baseUrl}}"], "path": ["auth", "refresh"] },
+            "description": "Public. Rotates the refresh token — the old one is revoked."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const body = pm.response.json();",
+                  "  pm.collectionVariables.set('accessToken', body.data.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', body.data.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/logout", "host": ["{{baseUrl}}"], "path": ["auth", "logout"] },
+            "description": "Public endpoint (revokes the given refresh token). Returns 204 No Content."
+          }
+        },
+        {
+          "name": "Get Current User (Me)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/auth/me", "host": ["{{baseUrl}}"], "path": ["auth", "me"] },
+            "description": "Requires: any authenticated user."
+          }
+        },
+        {
+          "name": "Create Staff/Admin Account",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"email\": \"staff1@agrodairy.local\",\n  \"password\": \"StaffPass123!\",\n  \"fullName\": \"Staff Member\",\n  \"phone\": \"+91 90000 00000\",\n  \"role\": \"STAFF\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/staff", "host": ["{{baseUrl}}"], "path": ["auth", "staff"] },
+            "description": "Requires: ADMIN. `role` must be \"STAFF\" or \"ADMIN\". Triggers a WELCOME notification to the new user."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Animals",
+      "item": [
+        {
+          "name": "List Animals",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/animals?page=0&size=20&sort=createdAt,desc&status=MILKING&type=COW",
+              "host": ["{{baseUrl}}"],
+              "path": ["animals"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "20" },
+                { "key": "sort", "value": "createdAt,desc" },
+                { "key": "status", "value": "MILKING", "disabled": true, "description": "ACTIVE|MILKING|PREGNANT|DRY_PERIOD|UNDER_OBSERVATION|SOLD|DECEASED" },
+                { "key": "type", "value": "COW", "disabled": true, "description": "COW|BUFFALO" }
+              ]
+            },
+            "description": "Requires: STAFF or ADMIN."
+          }
+        },
+        {
+          "name": "Get Animal by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/animals/{{animalId}}", "host": ["{{baseUrl}}"], "path": ["animals", "{{animalId}}"] },
+            "description": "Requires: STAFF or ADMIN."
+          }
+        },
+        {
+          "name": "Create Animal",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"tag\": \"COW-101\",\n  \"type\": \"COW\",\n  \"breed\": \"Jersey\",\n  \"dateOfBirth\": \"2022-04-10\",\n  \"status\": \"MILKING\",\n  \"notes\": \"Healthy, good yield\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/animals", "host": ["{{baseUrl}}"], "path": ["animals"] },
+            "description": "Requires: STAFF or ADMIN."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  pm.collectionVariables.set('animalId', pm.response.json().data.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Animal",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"status\": \"DRY_PERIOD\",\n  \"notes\": \"Entering dry period\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/animals/{{animalId}}", "host": ["{{baseUrl}}"], "path": ["animals", "{{animalId}}"] },
+            "description": "Requires: STAFF or ADMIN. All fields optional — send only what changes."
+          }
+        },
+        {
+          "name": "Delete Animal",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/animals/{{animalId}}", "host": ["{{baseUrl}}"], "path": ["animals", "{{animalId}}"] },
+            "description": "Requires: ADMIN. Returns 204 No Content."
+          }
+        },
+        {
+          "name": "List Production Records",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/animals/{{animalId}}/production?page=0&size=20&sort=createdAt,desc&from=2026-07-01&to=2026-07-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["animals", "{{animalId}}", "production"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "20" },
+                { "key": "sort", "value": "createdAt,desc" },
+                { "key": "from", "value": "2026-07-01", "disabled": true },
+                { "key": "to", "value": "2026-07-31", "disabled": true }
+              ]
+            },
+            "description": "Requires: STAFF or ADMIN."
+          }
+        },
+        {
+          "name": "Record Production",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"productionDate\": \"2026-07-18\",\n  \"session\": \"MORNING\",\n  \"quantityLitres\": 18.5\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/animals/{{animalId}}/production", "host": ["{{baseUrl}}"], "path": ["animals", "{{animalId}}", "production"] },
+            "description": "Requires: STAFF or ADMIN. `session` is MORNING or EVENING. A statistically abnormal drop vs. this animal's own baseline (needs 7+ prior same-session records) automatically raises an entry on GET /ai/anomalies."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Products & Categories",
+      "item": [
+        {
+          "name": "List Categories",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/categories", "host": ["{{baseUrl}}"], "path": ["categories"] },
+            "description": "Public."
+          }
+        },
+        {
+          "name": "Create Category",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"name\": \"Cow Milk\",\n  \"kind\": \"DAIRY\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/categories", "host": ["{{baseUrl}}"], "path": ["categories"] },
+            "description": "Requires: ADMIN. `kind` is DAIRY or AGRICULTURE."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  pm.collectionVariables.set('categoryId', pm.response.json().data.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Products",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/products?page=0&size=20&sort=createdAt,desc&active=true&categoryId={{categoryId}}&kind=DAIRY&search=milk",
+              "host": ["{{baseUrl}}"],
+              "path": ["products"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "20" },
+                { "key": "sort", "value": "createdAt,desc" },
+                { "key": "active", "value": "true", "disabled": true },
+                { "key": "categoryId", "value": "{{categoryId}}", "disabled": true },
+                { "key": "kind", "value": "DAIRY", "disabled": true, "description": "DAIRY|AGRICULTURE" },
+                { "key": "search", "value": "milk", "disabled": true }
+              ]
+            },
+            "description": "Public."
+          }
+        },
+        {
+          "name": "Get Product by ID",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/products/{{productId}}", "host": ["{{baseUrl}}"], "path": ["products", "{{productId}}"] },
+            "description": "Public."
+          }
+        },
+        {
+          "name": "Create Product",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"categoryId\": \"{{categoryId}}\",\n  \"name\": \"Fresh Curd 200g\",\n  \"description\": \"Thick, creamy curd made fresh daily\",\n  \"price\": 25.00,\n  \"unit\": \"pack\",\n  \"shelfLifeDays\": 4,\n  \"imageUrl\": \"https://example.com/curd.jpg\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/products", "host": ["{{baseUrl}}"], "path": ["products"] },
+            "description": "Requires: STAFF or ADMIN. `categoryId` must reference an existing category."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  pm.collectionVariables.set('productId', pm.response.json().data.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Product",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"price\": 28.00\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/products/{{productId}}", "host": ["{{baseUrl}}"], "path": ["products", "{{productId}}"] },
+            "description": "Requires: STAFF or ADMIN. All fields optional — send only what changes."
+          }
+        },
+        {
+          "name": "Deactivate Product",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/products/{{productId}}", "host": ["{{baseUrl}}"], "path": ["products", "{{productId}}"] },
+            "description": "Requires: ADMIN. Soft-deletes (sets active=false), returns 204 No Content."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Inventory",
+      "item": [
+        {
+          "name": "List Batches",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/inventory/batches?page=0&size=20&sort=createdAt,desc&productId={{productId}}&status=ACTIVE&expiringWithinDays=3",
+              "host": ["{{baseUrl}}"],
+              "path": ["inventory", "batches"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "20" },
+                { "key": "sort", "value": "createdAt,desc" },
+                { "key": "productId", "value": "{{productId}}", "disabled": true },
+                { "key": "status", "value": "ACTIVE", "disabled": true, "description": "ACTIVE|EXPIRED|SOLD_OUT|DISCARDED" },
+                { "key": "expiringWithinDays", "value": "3", "disabled": true }
+              ]
+            },
+            "description": "Requires: STAFF or ADMIN."
+          }
+        },
+        {
+          "name": "Create Batch",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"productId\": \"{{productId}}\",\n  \"batchCode\": \"CURD-2026-001\",\n  \"manufactureDate\": \"2026-07-18\",\n  \"expiryDate\": \"2026-07-22\",\n  \"quantityProduced\": 50\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/inventory/batches", "host": ["{{baseUrl}}"], "path": ["inventory", "batches"] },
+            "description": "Requires: STAFF or ADMIN. `batchCode` must be unique."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  pm.collectionVariables.set('batchId', pm.response.json().data.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Batch Status",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"status\": \"DISCARDED\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/inventory/batches/{{batchId}}", "host": ["{{baseUrl}}"], "path": ["inventory", "batches", "{{batchId}}"] },
+            "description": "Requires: STAFF or ADMIN."
+          }
+        },
+        {
+          "name": "Get Inventory Alerts",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/inventory/alerts", "host": ["{{baseUrl}}"], "path": ["inventory", "alerts"] },
+            "description": "Requires: STAFF or ADMIN. Computed live on read: expiringSoon (<=3 days), lowStock (<10 available), outOfStock."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cart",
+      "item": [
+        {
+          "name": "Get Cart",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/cart", "host": ["{{baseUrl}}"], "path": ["cart"] },
+            "description": "Requires: CUSTOMER."
+          }
+        },
+        {
+          "name": "Add Item to Cart",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"productId\": \"{{productId}}\",\n  \"quantity\": 2\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/cart/items", "host": ["{{baseUrl}}"], "path": ["cart", "items"] },
+            "description": "Requires: CUSTOMER."
+          }
+        },
+        {
+          "name": "Update Cart Item Quantity",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"quantity\": 5\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/cart/items/{{productId}}", "host": ["{{baseUrl}}"], "path": ["cart", "items", "{{productId}}"] },
+            "description": "Requires: CUSTOMER."
+          }
+        },
+        {
+          "name": "Remove Item from Cart",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/cart/items/{{productId}}", "host": ["{{baseUrl}}"], "path": ["cart", "items", "{{productId}}"] },
+            "description": "Requires: CUSTOMER. Returns the updated cart."
+          }
+        },
+        {
+          "name": "Clear Cart",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/cart", "host": ["{{baseUrl}}"], "path": ["cart"] },
+            "description": "Requires: CUSTOMER. Returns 204 No Content."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "Create Order (from cart)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"deliveryAddress\": \"221B Farm Lane, Green Valley, Pune, 411001\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/orders", "host": ["{{baseUrl}}"], "path": ["orders"] },
+            "description": "Requires: CUSTOMER. Cart must be non-empty; allocates stock FEFO (earliest-expiring batch first) and fails with 409 INSUFFICIENT_STOCK if unavailable."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  pm.collectionVariables.set('orderId', pm.response.json().data.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Orders",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/orders?page=0&size=20&sort=createdAt,desc&status=PENDING",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "20" },
+                { "key": "sort", "value": "createdAt,desc" },
+                { "key": "status", "value": "PENDING", "disabled": true, "description": "PENDING|CONFIRMED|PROCESSING|PACKED|OUT_FOR_DELIVERY|DELIVERED|CANCELLED|REFUNDED" }
+              ]
+            },
+            "description": "Requires: any authenticated user. CUSTOMER sees only their own orders; STAFF/ADMIN see all."
+          }
+        },
+        {
+          "name": "Get Order by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/orders/{{orderId}}", "host": ["{{baseUrl}}"], "path": ["orders", "{{orderId}}"] },
+            "description": "Requires: any authenticated user. CUSTOMER can only view their own order (404 otherwise)."
+          }
+        },
+        {
+          "name": "Update Order Status",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"status\": \"CONFIRMED\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/orders/{{orderId}}/status", "host": ["{{baseUrl}}"], "path": ["orders", "{{orderId}}", "status"] },
+            "description": "Requires: STAFF or ADMIN. Forward-only pipeline: PENDING→CONFIRMED→PROCESSING→PACKED→OUT_FOR_DELIVERY→DELIVERED; CANCELLED only from PENDING/CONFIRMED; REFUNDED only from CANCELLED/DELIVERED. Notifies the order owner on every change."
+          }
+        },
+        {
+          "name": "Cancel Order",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/orders/{{orderId}}/cancel", "host": ["{{baseUrl}}"], "path": ["orders", "{{orderId}}", "cancel"] },
+            "description": "Requires: the order's owner (CUSTOMER, only while PENDING) or STAFF/ADMIN (any pre-DELIVERED status)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reviews",
+      "item": [
+        {
+          "name": "List Reviews for Product",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/products/{{productId}}/reviews?page=0&size=20&sort=createdAt,desc",
+              "host": ["{{baseUrl}}"],
+              "path": ["products", "{{productId}}", "reviews"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "20" },
+                { "key": "sort", "value": "createdAt,desc" }
+              ]
+            },
+            "description": "Public."
+          }
+        },
+        {
+          "name": "Create Review",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"rating\": 5,\n  \"comment\": \"Great quality, always fresh!\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/products/{{productId}}/reviews", "host": ["{{baseUrl}}"], "path": ["products", "{{productId}}", "reviews"] },
+            "description": "Requires: CUSTOMER. `rating` 1-5. One review per user per product (unique constraint)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Subscriptions",
+      "item": [
+        {
+          "name": "List Subscriptions",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/subscriptions?page=0&size=20&sort=createdAt,desc&status=ACTIVE",
+              "host": ["{{baseUrl}}"],
+              "path": ["subscriptions"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "20" },
+                { "key": "sort", "value": "createdAt,desc" },
+                { "key": "status", "value": "ACTIVE", "disabled": true, "description": "ACTIVE|PAUSED|CANCELLED|EXPIRED" }
+              ]
+            },
+            "description": "Requires: any authenticated user (CUSTOMER sees only their own)."
+          }
+        },
+        {
+          "name": "Get Subscription by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/subscriptions/{{subscriptionId}}", "host": ["{{baseUrl}}"], "path": ["subscriptions", "{{subscriptionId}}"] }
+          }
+        },
+        {
+          "name": "Create Subscription",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"productId\": \"{{productId}}\",\n  \"quantity\": 1,\n  \"frequency\": \"DAILY\",\n  \"deliveryTimeSlot\": \"morning\",\n  \"startDate\": \"2026-07-20\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/subscriptions", "host": ["{{baseUrl}}"], "path": ["subscriptions"] },
+            "description": "Requires: CUSTOMER. `frequency`: DAILY|ALTERNATE_DAY|CUSTOM. For CUSTOM, also send `weekdays` as comma-separated ISO day numbers, e.g. \"1,3,5\" (Mon,Wed,Fri)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  pm.collectionVariables.set('subscriptionId', pm.response.json().data.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Subscription",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"quantity\": 2\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/subscriptions/{{subscriptionId}}", "host": ["{{baseUrl}}"], "path": ["subscriptions", "{{subscriptionId}}"] },
+            "description": "All fields optional: quantity, weekdays, deliveryTimeSlot, endDate."
+          }
+        },
+        {
+          "name": "Pause Subscription",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/subscriptions/{{subscriptionId}}/pause", "host": ["{{baseUrl}}"], "path": ["subscriptions", "{{subscriptionId}}", "pause"] }
+          }
+        },
+        {
+          "name": "Resume Subscription",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/subscriptions/{{subscriptionId}}/resume", "host": ["{{baseUrl}}"], "path": ["subscriptions", "{{subscriptionId}}", "resume"] }
+          }
+        },
+        {
+          "name": "Cancel Subscription",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/subscriptions/{{subscriptionId}}/cancel", "host": ["{{baseUrl}}"], "path": ["subscriptions", "{{subscriptionId}}", "cancel"] }
+          }
+        },
+        {
+          "name": "Skip a Delivery Date",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"skipDate\": \"2026-07-25\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/subscriptions/{{subscriptionId}}/skip", "host": ["{{baseUrl}}"], "path": ["subscriptions", "{{subscriptionId}}", "skip"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Deliveries",
+      "item": [
+        {
+          "name": "List Deliveries (staff)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/deliveries?page=0&size=20&sort=deliveryDate,desc&date=2026-07-19&status=PENDING",
+              "host": ["{{baseUrl}}"],
+              "path": ["deliveries"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "20" },
+                { "key": "sort", "value": "deliveryDate,desc" },
+                { "key": "date", "value": "2026-07-19", "disabled": true },
+                { "key": "status", "value": "PENDING", "disabled": true, "description": "PENDING|OUT_FOR_DELIVERY|DELIVERED|FAILED" }
+              ]
+            },
+            "description": "Requires: STAFF or ADMIN."
+          }
+        },
+        {
+          "name": "My Deliveries (customer)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/deliveries/mine?page=0&size=20&sort=deliveryDate,desc",
+              "host": ["{{baseUrl}}"],
+              "path": ["deliveries", "mine"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "20" },
+                { "key": "sort", "value": "deliveryDate,desc" }
+              ]
+            },
+            "description": "Requires: CUSTOMER."
+          }
+        },
+        {
+          "name": "Update Delivery Status",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"status\": \"DELIVERED\",\n  \"notes\": \"Left with security guard\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/deliveries/{{deliveryId}}/status", "host": ["{{baseUrl}}"], "path": ["deliveries", "{{deliveryId}}", "status"] },
+            "description": "Requires: STAFF or ADMIN."
+          }
+        },
+        {
+          "name": "Get Daily Delivery Summary",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/deliveries/summary?date=2026-07-19",
+              "host": ["{{baseUrl}}"],
+              "path": ["deliveries", "summary"],
+              "query": [{ "key": "date", "value": "2026-07-19" }]
+            },
+            "description": "Requires: STAFF or ADMIN. `date` is required (ISO yyyy-MM-dd). Returns totalStops + totalItemsByProduct pick-list."
+          }
+        }
+      ]
+    },
+    {
+      "name": "AI (Anomalies & Forecast)",
+      "item": [
+        {
+          "name": "List Anomalies",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/ai/anomalies?page=0&size=20&sort=detectedAt,desc&acknowledged=false&severity=HIGH",
+              "host": ["{{baseUrl}}"],
+              "path": ["ai", "anomalies"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "20" },
+                { "key": "sort", "value": "detectedAt,desc" },
+                { "key": "acknowledged", "value": "false", "disabled": true },
+                { "key": "severity", "value": "HIGH", "disabled": true, "description": "LOW|MEDIUM|HIGH" }
+              ]
+            },
+            "description": "Requires: STAFF or ADMIN."
+          }
+        },
+        {
+          "name": "Acknowledge Anomaly",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{baseUrl}}/ai/anomalies/{{anomalyId}}/ack", "host": ["{{baseUrl}}"], "path": ["ai", "anomalies", "{{anomalyId}}", "ack"] },
+            "description": "Requires: STAFF or ADMIN."
+          }
+        },
+        {
+          "name": "Get Demand Forecast",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/ai/demand-forecast?productId={{productId}}&days=7",
+              "host": ["{{baseUrl}}"],
+              "path": ["ai", "demand-forecast"],
+              "query": [
+                { "key": "productId", "value": "{{productId}}" },
+                { "key": "days", "value": "7" }
+              ]
+            },
+            "description": "Requires: STAFF or ADMIN. Calls ai-service internally, logs the prediction to forecast_logs, returns predictions with a confidence band. 404 if the product has no trained model yet."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Analytics",
+      "item": [
+        {
+          "name": "Get Dashboard",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/analytics/dashboard", "host": ["{{baseUrl}}"], "path": ["analytics", "dashboard"] },
+            "description": "Requires: STAFF or ADMIN. Live KPIs + 30-day revenue/production trend lines + top-selling products."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "List My Notifications",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/notifications?page=0&size=20&sort=createdAt,desc&isRead=false",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "20" },
+                { "key": "sort", "value": "createdAt,desc" },
+                { "key": "isRead", "value": "false", "disabled": true }
+              ]
+            },
+            "description": "Requires: any authenticated user. Always scoped to the caller's own notifications."
+          }
+        },
+        {
+          "name": "Mark Notification Read",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{baseUrl}}/notifications/{{notificationId}}/read", "host": ["{{baseUrl}}"], "path": ["notifications", "{{notificationId}}", "read"] },
+            "description": "Requires: the notification's owner (404 for anyone else)."
+          }
+        }
+      ]
+    }
+  ]
+}
