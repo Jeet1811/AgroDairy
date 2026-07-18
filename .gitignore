@@ -12,7 +12,9 @@ ai-service/venv/
 ai-service/__pycache__/
 ai-service/**/__pycache__/
 ai-service/*.egg-info/
-ai-service/app/models/*.joblib
+# Trained model IS committed (see ai-service/app/models/demand_model.joblib) — Render builds
+# from a fresh git clone with no access to this machine's local training run, so the model
+# artifact has to ship in the repo for the deployed ai-service to have anything to load.
 
 # Env files
 .env
